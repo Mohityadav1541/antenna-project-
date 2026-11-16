@@ -1,0 +1,15 @@
+.venv
+.pytest_cache
+__pycache__
+*.py
+*.pyc
+requirements.txt
+conftest.py
+main.py
+core/
+gui/
+analysis/
+experiments/
+export/
+tests/
+output/
