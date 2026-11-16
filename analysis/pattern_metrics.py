@@ -163,9 +163,19 @@ def compute_pattern_metrics(
         nulls_rad = find_analytical_nulls(N, d_over_lambda, beta_rad)
         nulls_deg = [float(np.degrees(th)) for th in nulls_rad]
     else:
-        # Numerical nulls: local minima in af_n where af_n < 0.05
-        minima, _ = find_peaks(-af_n, height=-0.05)
-        nulls_deg = [float(theta_deg[m]) for m in minima]
+        # Numerical nulls for tapered arrays:
+        # Use prominence to reject floating-point roundoff noise in deep attenuation basins
+        peaks, _ = find_peaks(-af_n, prominence=0.002)
+        interior_nulls = [float(theta_deg[p]) for p in peaks if af_n[p] < 0.05]
+
+        # Check boundary nulls at theta = 0° and theta = 180°
+        boundary_nulls = []
+        if af_n[0] < 1e-3:
+            boundary_nulls.append(0.0)
+        if af_n[-1] < 1e-3:
+            boundary_nulls.append(180.0)
+
+        nulls_deg = sorted(list(set(boundary_nulls + interior_nulls)))
 
     # 3. HPBW with linear interpolation
     # Half power is P_n = 0.5 <=> AF_n = 1/sqrt(2) approx 0.70710678 or AF_dB = -3.0103 dB

@@ -45,13 +45,13 @@ def get_hann_weights(N: int) -> np.ndarray:
 def get_weights_by_type(weight_type: str, N: int, custom_weights: Union[List[float], np.ndarray, None] = None) -> np.ndarray:
     """Factory function for excitation weights."""
     t = weight_type.lower().strip()
-    if t == "uniform":
+    if "uniform" in t:
         return get_uniform_weights(N)
-    elif t == "binomial":
+    elif "binomial" in t:
         return get_binomial_weights(N)
-    elif t in ("hann", "cosine"):
+    elif "hann" in t or "cosine" in t:
         return get_hann_weights(N)
-    elif t == "custom":
+    elif "custom" in t:
         if custom_weights is None or len(custom_weights) != N:
             return get_uniform_weights(N)
         w = np.asarray(custom_weights, dtype=np.float64)

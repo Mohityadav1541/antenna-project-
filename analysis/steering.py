@@ -18,22 +18,38 @@ def compute_steering_phase(theta_0_rad: float, d_over_lambda: float) -> float:
 
 def compute_achieved_angle(beta_rad: float, d_over_lambda: float) -> Optional[float]:
     """
-    Computes actual pointing angle theta_achieved for a given excitation phase beta:
-    cos(theta_0) = -beta / kd
-    Returns angle in radians if in visible region [0, pi], else None.
+    Computes actual pointing angle theta_achieved for a given excitation phase beta.
+    A principal maximum occurs where psi = kd * cos(theta) + beta = 2 * m * pi (integer m):
+    cos(theta) = (2 * m * pi - beta) / kd.
+    
+    Searches all integer m. If a unique principal beam exists in visible space [0, pi],
+    returns its angle in radians. If multiple equal-height maxima exist (grating lobes),
+    returns the one corresponding to the closest integer m to 0.
+    If no principal beam is in visible space, returns None.
     """
     kd = 2.0 * np.pi * d_over_lambda
     if kd <= 0:
         return None
 
-    cos_val = -beta_rad / kd
-    # Numerical tolerance for exact boundary points (e.g. -1.0000000000001)
-    if np.isclose(abs(cos_val), 1.0, atol=1e-9):
-        cos_val = np.clip(cos_val, -1.0, 1.0)
+    # Search for all integer m where |(2*m*pi - beta) / kd| <= 1
+    m_min = int(np.floor((-kd + beta_rad) / (2.0 * np.pi))) - 1
+    m_max = int(np.ceil((kd + beta_rad) / (2.0 * np.pi))) + 1
 
-    if abs(cos_val) <= 1.0:
-        return float(np.arccos(cos_val))
-    return None
+    valid_solutions = []
+    for m in range(m_min, m_max + 1):
+        cos_val = (2.0 * m * np.pi - beta_rad) / kd
+        if np.isclose(abs(cos_val), 1.0, atol=1e-9):
+            cos_val = np.clip(cos_val, -1.0, 1.0)
+        if abs(cos_val) <= 1.0:
+            th = float(np.arccos(cos_val))
+            valid_solutions.append((abs(m), m, th))
+
+    if not valid_solutions:
+        return None
+
+    # Sort primarily by |m| (prefer fundamental beam m=0), then by angle
+    valid_solutions.sort(key=lambda item: (item[0], item[2]))
+    return valid_solutions[0][2]
 
 
 def steering_summary(

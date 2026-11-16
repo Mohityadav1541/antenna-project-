@@ -27,6 +27,7 @@ from gui.plots_widget import AntennaPlotsWidget
 from gui.geometry_widget import InteractiveGeometryWidget
 from gui.results_widget import NumericalResultsWidget
 from gui.compare_dialog import ComparePatternsDialog
+from gui.theme import get_dark_theme_qss, get_light_theme_qss
 from export.csv_exporter import export_pattern_to_csv
 from export.plot_exporter import save_figure
 
@@ -35,10 +36,13 @@ class AntennaSimulationWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Interactive Antenna Array Simulation & Radiation Pattern Control")
-        self.resize(1380, 880)
+        self.resize(1480, 880)
+        self.setMinimumSize(1240, 720)
+        self._is_dark_theme = True
 
         # Main Central Widget with horizontal splitter
         central_widget = QWidget()
+        central_widget.setObjectName("centralWidget")
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
         main_layout.setContentsMargins(4, 4, 4, 4)
@@ -46,13 +50,15 @@ class AntennaSimulationWindow(QMainWindow):
         splitter_h = QSplitter(Qt.Orientation.Horizontal)
         main_layout.addWidget(splitter_h)
 
-        # Left Column: Controls (Scrollable)
+        # Left Column: Controls (4 compact groups)
         scroll_controls = QScrollArea()
         scroll_controls.setWidgetResizable(True)
+        scroll_controls.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_controls.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.controls = ControlsPanel()
         scroll_controls.setWidget(self.controls)
-        scroll_controls.setMinimumWidth(340)
-        scroll_controls.setMaximumWidth(420)
+        scroll_controls.setMinimumWidth(380)
+        scroll_controls.setMaximumWidth(460)
         splitter_h.addWidget(scroll_controls)
 
         # Middle Column: Plots + Geometry Visualizer
@@ -66,25 +72,29 @@ class AntennaSimulationWindow(QMainWindow):
         self.geometry = InteractiveGeometryWidget()
         splitter_v.addWidget(self.plots)
         splitter_v.addWidget(self.geometry)
-        splitter_v.setStretchFactor(0, 3)
+        splitter_v.setStretchFactor(0, 5)
         splitter_v.setStretchFactor(1, 2)
+        splitter_v.setSizes([540, 240])
 
         middle_layout.addWidget(splitter_v)
         splitter_h.addWidget(middle_widget)
 
-        # Right Column: Live Numerical Results (Scrollable)
+        # Right Column: Live Numerical Results (3 compact groups)
         scroll_results = QScrollArea()
         scroll_results.setWidgetResizable(True)
+        scroll_results.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_results.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.results = NumericalResultsWidget()
         scroll_results.setWidget(self.results)
-        scroll_results.setMinimumWidth(280)
-        scroll_results.setMaximumWidth(360)
+        scroll_results.setMinimumWidth(330)
+        scroll_results.setMaximumWidth(420)
         splitter_h.addWidget(scroll_results)
 
         # Splitter sizing
-        splitter_h.setStretchFactor(0, 1)
-        splitter_h.setStretchFactor(1, 3)
-        splitter_h.setStretchFactor(2, 1)
+        splitter_h.setStretchFactor(0, 0)
+        splitter_h.setStretchFactor(1, 1)
+        splitter_h.setStretchFactor(2, 0)
+        splitter_h.setSizes([390, 750, 360])
 
         # Status Bar
         self.status_bar = QStatusBar()
@@ -113,6 +123,7 @@ class AntennaSimulationWindow(QMainWindow):
         self.controls.export_csv_clicked.connect(self.on_export_csv)
         self.controls.compare_patterns_clicked.connect(self.on_compare_patterns)
         self.controls.toggle_animation_clicked.connect(self.on_toggle_animation)
+        self.plots.btn_theme_toggle.clicked.connect(self.on_toggle_theme)
 
     # ---------------- Calculation & Rendering ----------------
     def recompute_and_update(self):
@@ -136,9 +147,10 @@ class AntennaSimulationWindow(QMainWindow):
         # 1. Core pattern computation
         is_uniform = (w_type == "Uniform")
         amplitudes = None if is_uniform else weights
+        phases = params.get("phases", None)
 
         af_n, p_n, af_db = compute_normalized_pattern(
-            theta_rad, N, d, beta_rad, amplitudes=amplitudes
+            theta_rad, N, d, beta_rad, amplitudes=amplitudes, phases=phases
         )
 
         # 2. Pattern metrics detection
@@ -150,7 +162,8 @@ class AntennaSimulationWindow(QMainWindow):
 
         # 3. Update Plots
         self.plots.update_plots(
-            theta_rad, af_n, af_db, metrics, plot_floor_db=floor_db, weights=weights
+            theta_rad, af_n, af_db, metrics, plot_floor_db=floor_db, weights=weights,
+            desired_theta_deg=theta0_deg,
         )
 
         # 4. Update Array Geometry & Excitation Phasors
@@ -251,9 +264,10 @@ class AntennaSimulationWindow(QMainWindow):
             beta_rad = np.radians(beta)
             is_uniform = (w_type == "Uniform")
             amplitudes = None if is_uniform else weights
+            phases = params.get("phases", None)
 
             af_n, p_n, af_db = compute_normalized_pattern(
-                theta_rad, N, d, beta_rad, amplitudes=amplitudes
+                theta_rad, N, d, beta_rad, amplitudes=amplitudes, phases=phases
             )
             metrics = compute_pattern_metrics(
                 theta_rad, af_n, af_db, N, d, beta_rad,
@@ -313,3 +327,29 @@ class AntennaSimulationWindow(QMainWindow):
             self._anim_dir = 1.0
 
         self.controls.spin_theta0.setValue(new_th0)
+
+    def on_toggle_theme(self):
+        from PyQt6.QtWidgets import QApplication
+        app = QApplication.instance()
+        self._is_dark_theme = not self._is_dark_theme
+        if self._is_dark_theme:
+            if app is not None:
+                app.setStyleSheet(get_dark_theme_qss())
+            self.plots.btn_theme_toggle.setText("☀️ Light Mode")
+            self.plots.btn_theme_toggle.setStyleSheet("""
+                QPushButton { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; background: #334155; color: #f8fafc; border: 1px solid #475569; }
+                QPushButton:hover { background: #475569; }
+            """)
+            self.results.set_dark_mode(True)
+            self.status_bar.showMessage("Switched to High-Contrast Dark Slate theme.")
+        else:
+            if app is not None:
+                app.setStyleSheet(get_light_theme_qss())
+            self.plots.btn_theme_toggle.setText("🌙 Dark Mode")
+            self.plots.btn_theme_toggle.setStyleSheet("""
+                QPushButton { font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 4px; background: #e2e8f0; color: #0f172a; border: 1px solid #cbd5e1; }
+                QPushButton:hover { background: #cbd5e1; }
+            """)
+            self.results.set_dark_mode(False)
+            self.status_bar.showMessage("Switched to High-Contrast Executive Light theme.")
+        self.recompute_and_update()

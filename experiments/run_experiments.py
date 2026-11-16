@@ -6,6 +6,7 @@ Generates all 12 required figures and 3 validation tables specified in Section 1
 import os
 import sys
 from pathlib import Path
+os.environ["MPLCONFIGDIR"] = "/tmp/matplotlib_cache"
 import numpy as np
 import matplotlib
 matplotlib.use("Agg")  # Non-interactive backend for headless figure generation
