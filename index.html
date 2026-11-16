@@ -1,0 +1,1394 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interactive Linear Antenna Array Simulator & Radiation Pattern Control</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#151f32',
+              900: '#0f172a',
+              950: '#0b1120',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <!-- Plotly.js -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+  <style>
+    input[type=range] {
+      accent-color: #38bdf8;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans flex flex-col transition-colors duration-200">
+
+  <!-- Header -->
+  <header class="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex items-center justify-between sticky top-0 z-30 shadow-md">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/30">
+        📡
+      </div>
+      <div>
+        <h1 class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+          Linear Antenna Array Simulator
+          <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">Academic Edition</span>
+        </h1>
+        <p class="text-[11px] text-slate-400">Course: Antennas & Wave Propagation • Uniform & Tapered Linear Arrays</p>
+      </div>
+    </div>
+
+    <!-- Header Actions -->
+    <div class="flex items-center space-x-2">
+      <a href="/Antenna_Array_Simulation_Report.pdf" download class="px-2.5 py-1 text-xs font-medium rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        📄 Download PDF Report
+      </a>
+      <button id="btnExportCsv" class="px-2.5 py-1 text-xs font-medium rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        📊 Export CSV
+      </button>
+      <button id="btnToggleTheme" class="px-2.5 py-1 text-xs font-semibold rounded bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 transition flex items-center gap-1">
+        ☀️ Light Mode
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Grid Workspace -->
+  <main class="flex-1 p-3 grid grid-cols-1 lg:grid-cols-12 gap-3 max-w-[1920px] mx-auto w-full">
+
+    <!-- LEFT COLUMN: Controls Panel (Cols 3) -->
+    <div class="lg:col-span-3 space-y-3 flex flex-col">
+
+      <!-- 1. Array Parameters -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider">1. Array Parameters</h2>
+          <span id="txtPhysicalSummary" class="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/50">λ: 99.9 mm | d: 50.0 mm</span>
+        </div>
+
+        <div class="space-y-2 text-xs">
+          <!-- Elements N -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="font-medium text-slate-300">Elements (N):</label>
+              <input type="number" id="numN" min="2" max="64" value="8" class="w-14 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-white text-xs">
+            </div>
+            <input type="range" id="sliderN" min="2" max="64" value="8" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Spacing d/lambda -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="font-medium text-slate-300">Spacing (d/λ):</label>
+              <input type="number" id="numD" min="0.05" max="2.00" step="0.01" value="0.50" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-white text-xs">
+            </div>
+            <input type="range" id="sliderD" min="5" max="200" value="50" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Frequency -->
+          <div class="flex items-center justify-between pt-1">
+            <label class="font-medium text-slate-300">Frequency (GHz):</label>
+            <input type="number" id="numFreq" min="0.1" max="30.0" step="0.5" value="3.0" class="w-20 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-white text-xs">
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Steering & Phase Control -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow">
+        <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-2">2. Steering & Phase Control</h2>
+
+        <div class="space-y-2 text-xs">
+          <!-- Steering angle theta_0 -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="font-medium text-slate-300">Desired Angle (θ₀):</label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="numTheta0" min="0" max="180" step="1" value="90" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-white text-xs">
+                <span class="text-slate-400">°</span>
+              </div>
+            </div>
+            <input type="range" id="sliderTheta0" min="0" max="180" value="90" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Progressive Phase beta -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="font-medium text-slate-300">Phase (β):</label>
+              <div class="flex items-center gap-1">
+                <input type="number" id="numBeta" min="-360" max="360" step="1" value="0" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-white text-xs">
+                <span class="text-slate-400">°</span>
+              </div>
+            </div>
+            <input type="range" id="sliderBeta" min="-360" max="360" value="0" class="w-full h-1.5 bg-slate-800 rounded-lg cursor-pointer">
+          </div>
+
+          <!-- Auto-Steer Toggle -->
+          <button id="btnAutoSteer" class="w-full mt-1 py-1.5 text-xs font-bold rounded bg-blue-600 hover:bg-blue-500 text-white shadow transition flex items-center justify-center gap-1.5">
+            ⚡ Auto Steer: ON
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Excitation & Display -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow">
+        <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-2">3. Excitation & Display</h2>
+
+        <div class="space-y-2 text-xs">
+          <!-- Tapering selection -->
+          <div class="flex items-center gap-2">
+            <label class="font-medium text-slate-300 whitespace-nowrap">Tapering:</label>
+            <select id="selectTaper" class="flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-white text-xs font-medium">
+              <option value="Uniform" selected>Uniform</option>
+              <option value="Binomial">Binomial</option>
+              <option value="Hann (Cosine)">Hann (Cosine)</option>
+              <option value="Custom">Custom...</option>
+            </select>
+            <button id="btnEditCustomWeights" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded border border-slate-700 text-xs hidden">
+              Edit...
+            </button>
+          </div>
+
+          <!-- Step & Floor -->
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <label class="font-medium text-slate-400 block mb-0.5 text-[11px]">Angular Step:</label>
+              <select id="selectStep" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-white text-xs">
+                <option value="0.05">0.05° (Ultra)</option>
+                <option value="0.10" selected>0.10° (High)</option>
+                <option value="0.25">0.25° (Normal)</option>
+                <option value="0.50">0.50° (Fast)</option>
+              </select>
+            </div>
+            <div>
+              <label class="font-medium text-slate-400 block mb-0.5 text-[11px]">Plot Floor:</label>
+              <select id="selectFloor" class="w-full bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-white text-xs">
+                <option value="-40">-40 dB</option>
+                <option value="-60" selected>-60 dB</option>
+                <option value="-80">-80 dB</option>
+                <option value="-100">-100 dB</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Required Actions & Presets -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow">
+        <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-2">4. Presets & Actions</h2>
+
+        <div class="grid grid-cols-3 gap-1.5 text-xs mb-2">
+          <button id="btnBroadside" class="py-1 px-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-slate-200 font-semibold text-center transition">
+            Broadside (90°)
+          </button>
+          <button id="btnPosEndfire" class="py-1 px-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-slate-200 font-semibold text-center transition">
+            + End-Fire (0°)
+          </button>
+          <button id="btnNegEndfire" class="py-1 px-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-slate-200 font-semibold text-center transition">
+            - End-Fire (180°)
+          </button>
+        </div>
+
+        <div class="grid grid-cols-3 gap-1.5 text-xs">
+          <button id="btnReset" class="py-1 px-2 bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-200 font-bold rounded transition">
+            ↺ Reset
+          </button>
+          <button id="btnAnimate" class="py-1 px-2 bg-emerald-900/80 hover:bg-emerald-800 border border-emerald-700 text-emerald-200 font-bold rounded transition">
+            ▶ Animate
+          </button>
+          <button id="btnCompare" class="py-1 px-2 bg-purple-900/80 hover:bg-purple-800 border border-purple-700 text-purple-200 font-bold rounded transition">
+            Compare
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MIDDLE COLUMN: Visualizations (Cols 6) -->
+    <div class="lg:col-span-6 flex flex-col space-y-3">
+
+      <!-- Plot Tab Container -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg overflow-hidden shadow flex flex-col">
+        <!-- Tab Bar & Overlays -->
+        <div class="bg-slate-950 px-3 pt-2 pb-1 border-b border-slate-800 flex flex-wrap items-center justify-between gap-2">
+          <!-- Tabs -->
+          <div class="flex space-x-1" id="tabContainer">
+            <button class="tab-btn px-3 py-1 text-xs font-bold rounded-t text-sky-400 bg-slate-900 border-t border-x border-slate-800 border-b-0" data-tab="linear">
+              Cartesian |AF_n|
+            </button>
+            <button class="tab-btn px-3 py-1 text-xs font-medium rounded-t text-slate-400 hover:text-slate-200" data-tab="db">
+              Cartesian (dB)
+            </button>
+            <button class="tab-btn px-3 py-1 text-xs font-medium rounded-t text-slate-400 hover:text-slate-200" data-tab="polar">
+              Polar Pattern
+            </button>
+            <button class="tab-btn px-3 py-1 text-xs font-medium rounded-t text-slate-400 hover:text-slate-200" data-tab="3d">
+              3D Pattern
+            </button>
+            <button class="tab-btn px-3 py-1 text-xs font-medium rounded-t text-slate-400 hover:text-slate-200" data-tab="weights">
+              Excitation Weights
+            </button>
+          </div>
+
+          <!-- Overlays -->
+          <div class="flex items-center space-x-3 text-[11px] text-slate-300">
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" id="chkMarkers" checked class="rounded border-slate-700">
+              Markers
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" id="chkHpbw" checked class="rounded border-slate-700">
+              HPBW
+            </label>
+            <label class="flex items-center gap-1 cursor-pointer">
+              <input type="checkbox" id="chkSteering" checked class="rounded border-slate-700">
+              Steering Line
+            </label>
+          </div>
+        </div>
+
+        <!-- Main Plot Div -->
+        <div id="plotDiv" class="w-full h-[400px] bg-slate-900"></div>
+      </div>
+
+      <!-- Geometry Visualizer Canvas -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow flex flex-col">
+        <div class="flex items-center justify-between mb-1.5">
+          <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider">Array Geometry & Excitation Phasors</h2>
+          <span id="txtInterferenceStatus" class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60">
+            Constructive Interference (Main Beam)
+          </span>
+        </div>
+        <canvas id="geometryCanvas" class="w-full h-[180px] rounded bg-slate-950 border border-slate-800/80"></canvas>
+      </div>
+
+    </div>
+
+    <!-- RIGHT COLUMN: Live Numerical Results (Cols 3) -->
+    <div class="lg:col-span-3 space-y-3 flex flex-col">
+
+      <!-- Group 1: Beam Characteristics -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow">
+        <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-2.5">1. Beam Characteristics</h2>
+        <div class="space-y-2 text-xs">
+
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Main-Beam Angle:</span>
+            <span id="valMainBeam" class="font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">90.00°</span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">HPBW (-3 dB):</span>
+            <span id="valHpbw" class="font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">12.80°</span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">FNBW (First-Null):</span>
+            <span id="valFnbw" class="font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">28.96°</span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Peak SLL:</span>
+            <span id="valSll" class="font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">-12.80 dB</span>
+          </div>
+
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Visible Grating Lobes:</span>
+            <span id="valGrating" class="font-mono font-bold text-slate-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">0 (None)</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Group 2: Phase & Wavenumber -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow">
+        <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-2">2. Phase & Wavenumber</h2>
+        <div class="space-y-2 text-xs">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Spatial Phase kd:</span>
+            <span id="valKd" class="font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">3.1416 rad (180.0°)</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-400">Progressive Phase β:</span>
+            <span id="valBeta" class="font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">0.0° (0.0000 rad)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Group 3: Pattern Angular Locations -->
+      <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 shadow">
+        <h2 class="text-xs font-bold text-sky-400 uppercase tracking-wider mb-2">3. Angular Locations</h2>
+
+        <div class="space-y-2 text-xs">
+          <div>
+            <span class="text-[11px] font-medium text-slate-400 block mb-1">All Global Maxima (θ):</span>
+            <div id="valMaximaList" class="font-mono text-xs text-sky-300 bg-slate-950 p-1.5 rounded border border-slate-800 break-words max-h-16 overflow-y-auto custom-scrollbar">
+              90.00°
+            </div>
+          </div>
+
+          <div>
+            <span class="text-[11px] font-medium text-slate-400 block mb-1">Null Angles (θ):</span>
+            <div id="valNullsList" class="font-mono text-xs text-emerald-400 bg-slate-950 p-1.5 rounded border border-slate-800 break-words max-h-20 overflow-y-auto custom-scrollbar">
+              75.52°, 104.48°, 60.00°, 120.00°...
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Custom Weights Modal -->
+  <div id="modalWeights" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 w-full max-w-md shadow-2xl">
+      <div class="flex justify-between items-center mb-3">
+        <h3 class="text-sm font-bold text-white">Edit Custom Element Amplitudes</h3>
+        <button id="btnCloseModal" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+      <div class="max-h-60 overflow-y-auto custom-scrollbar border border-slate-800 rounded mb-3">
+        <table class="w-full text-xs text-left">
+          <thead class="bg-slate-950 text-slate-400">
+            <tr>
+              <th class="p-2">Element n</th>
+              <th class="p-2">Amplitude (a_n)</th>
+            </tr>
+          </thead>
+          <tbody id="tableWeightsBody" class="divide-y divide-slate-800 font-mono"></tbody>
+        </table>
+      </div>
+      <div class="flex justify-end gap-2">
+        <button id="btnApplyCustomWeights" class="px-3 py-1 bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs rounded">
+          Apply Excitations
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Client Simulation Engine & Interactive Script -->
+  <script>
+    // Physics Constants
+    const C = 299792458.0;
+
+    // State
+    const state = {
+      N: 8,
+      d: 0.50,
+      freq: 3.0,
+      theta0: 90.0,
+      beta: 0.0,
+      step: 0.10,
+      floorDb: -60.0,
+      taper: 'Uniform',
+      customWeights: Array(8).fill(1.0),
+      autoSteer: true,
+      activeTab: 'linear',
+      animating: false,
+      animDir: 1,
+      referenceData: null,
+      isDark: true
+    };
+
+    let animInterval = null;
+
+    // Mathematics Engine
+    function calcSimulation() {
+      const N = state.N;
+      const d = state.d;
+      const betaRad = state.beta * Math.PI / 180.0;
+      const kd = 2.0 * Math.PI * d;
+      const stepRad = state.step * Math.PI / 180.0;
+      const numPts = Math.max(181, Math.round(Math.PI / stepRad) + 1);
+
+      const thetaRad = [];
+      const thetaDeg = [];
+      for (let i = 0; i < numPts; i++) {
+        const th = i * Math.PI / (numPts - 1);
+        thetaRad.push(th);
+        thetaDeg.push(th * 180.0 / Math.PI);
+      }
+
+      // Weights calculation
+      let weights = [];
+      if (state.taper === 'Uniform') {
+        weights = Array(N).fill(1.0);
+      } else if (state.taper === 'Binomial') {
+        // Binomial comb(N-1, n)
+        for (let n = 0; n < N; n++) {
+          let c = 1.0;
+          for (let i = 1; i <= n; i++) {
+            c = c * (N - i) / i;
+          }
+          weights.push(c);
+        }
+        const maxW = Math.max(...weights);
+        weights = weights.map(w => w / maxW);
+      } else if (state.taper.includes('Hann') || state.taper.includes('Cosine')) {
+        for (let n = 0; n < N; n++) {
+          weights.push(0.5 * (1.0 - Math.cos(2.0 * Math.PI * (n + 0.5) / N)));
+        }
+        const maxW = Math.max(...weights);
+        weights = weights.map(w => w / maxW);
+      } else {
+        weights = [...state.customWeights];
+        if (weights.length !== N) weights = Array(N).fill(1.0);
+      }
+
+      const sumWeights = weights.reduce((a, b) => a + b, 0.0) || 1.0;
+
+      // Complex Summation AF
+      const afN = [];
+      const afDb = [];
+      for (let i = 0; i < numPts; i++) {
+        const th = thetaRad[i];
+        const cosTh = Math.cos(th);
+        let realSum = 0.0;
+        let imagSum = 0.0;
+
+        for (let n = 0; n < N; n++) {
+          const phase = n * (kd * cosTh + betaRad);
+          realSum += weights[n] * Math.cos(phase);
+          imagSum += weights[n] * Math.sin(phase);
+        }
+
+        const mag = Math.sqrt(realSum * realSum + imagSum * imagSum);
+        const norm = Math.min(1.0, mag / sumWeights);
+        afN.push(norm);
+        const db = norm > 1e-6 ? 20.0 * Math.log10(norm) : -120.0;
+        afDb.push(db);
+      }
+
+      // Metrics calculation
+      const metrics = analyzeMetrics(thetaDeg, afN, afDb, N, d, betaRad, state.theta0);
+
+      return {
+        thetaDeg,
+        thetaRad,
+        afN,
+        afDb,
+        weights,
+        metrics,
+        kd,
+        wavelengthMm: (C / (state.freq * 1e9)) * 1000.0,
+        spacingMm: (d * (C / (state.freq * 1e9))) * 1000.0
+      };
+    }
+
+    function analyzeMetrics(thetaDeg, afN, afDb, N, d, betaRad, desiredTh0) {
+      const kd = 2.0 * Math.PI * d;
+
+      // 1. Analytical Maxima
+      const maxima = [];
+      const mMin = Math.floor((-kd + betaRad) / (2.0 * Math.PI)) - 1;
+      const mMax = Math.ceil((kd + betaRad) / (2.0 * Math.PI)) + 1;
+
+      for (let m = mMin; m <= mMax; m++) {
+        const cosVal = (2.0 * m * Math.PI - betaRad) / kd;
+        if (Math.abs(cosVal) <= 1.000001) {
+          const clipped = Math.max(-1.0, Math.min(1.0, cosVal));
+          maxima.push(Math.acos(clipped) * 180.0 / Math.PI);
+        }
+      }
+      maxima.sort((a, b) => a - b);
+
+      // Principal main beam (closest to desired theta0 or first fundamental)
+      let mainBeam = null;
+      if (maxima.length > 0) {
+        mainBeam = maxima.reduce((prev, curr) => Math.abs(curr - desiredTh0) < Math.abs(prev - desiredTh0) ? curr : prev);
+      }
+      const gratingLobes = maxima.filter(m => Math.abs(m - mainBeam) > 0.5);
+
+      // 2. Nulls Detection
+      const nulls = [];
+      for (let i = 1; i < afN.length - 1; i++) {
+        if (afN[i] < afN[i-1] && afN[i] < afN[i+1] && afN[i] < 0.05) {
+          nulls.push(thetaDeg[i]);
+        }
+      }
+
+      // 3. HPBW with linear interpolation
+      let hpbw = null;
+      let hpLeft = null;
+      let hpRight = null;
+      if (mainBeam !== null) {
+        const mbIdx = Math.round((mainBeam / 180.0) * (afN.length - 1));
+        const target = 1.0 / Math.SQRT2;
+
+        // Scan left
+        for (let i = mbIdx; i > 0; i--) {
+          if (afN[i] >= target && afN[i-1] < target) {
+            hpLeft = thetaDeg[i-1] + (target - afN[i-1]) * (thetaDeg[i] - thetaDeg[i-1]) / (afN[i] - afN[i-1]);
+            break;
+          }
+        }
+        // Scan right
+        for (let i = mbIdx; i < afN.length - 1; i++) {
+          if (afN[i] >= target && afN[i+1] < target) {
+            hpRight = thetaDeg[i] + (target - afN[i]) * (thetaDeg[i+1] - thetaDeg[i]) / (afN[i+1] - afN[i]);
+            break;
+          }
+        }
+        if (hpLeft !== null && hpRight !== null) {
+          hpbw = hpRight - hpLeft;
+        }
+      }
+
+      // 4. FNBW
+      let fnbw = null;
+      if (mainBeam !== null && nulls.length > 0) {
+        const leftNulls = nulls.filter(n => n < mainBeam - 0.1);
+        const rightNulls = nulls.filter(n => n > mainBeam + 0.1);
+        if (leftNulls.length > 0 && rightNulls.length > 0) {
+          fnbw = Math.min(...rightNulls) - Math.max(...leftNulls);
+        }
+      }
+
+      // 5. Peak SLL
+      let peakSllDb = null;
+      let peakSllAngle = null;
+      const peaks = [];
+      for (let i = 1; i < afN.length - 1; i++) {
+        if (afN[i] > afN[i-1] && afN[i] > afN[i+1]) {
+          const isMax = maxima.some(m => Math.abs(thetaDeg[i] - m) < 1.0);
+          if (!isMax && afN[i] < 0.98) {
+            peaks.push({ val: afN[i], db: afDb[i], angle: thetaDeg[i] });
+          }
+        }
+      }
+      if (peaks.length > 0) {
+        peaks.sort((a, b) => b.val - a.val);
+        peakSllDb = peaks[0].db;
+        peakSllAngle = peaks[0].angle;
+      }
+
+      return {
+        mainBeam,
+        gratingLobes,
+        maxima,
+        nulls,
+        hpbw,
+        hpLeft,
+        hpRight,
+        fnbw,
+        peakSllDb,
+        peakSllAngle
+      };
+    }
+
+    // Plot Rendering via Plotly
+    function renderPlot(simData) {
+      const pDiv = document.getElementById('plotDiv');
+      const bg = state.isDark ? '#0f172a' : '#ffffff';
+      const textCol = state.isDark ? '#f8fafc' : '#0f172a';
+      const gridCol = state.isDark ? '#334155' : '#e2e8f0';
+
+      const showMarkers = document.getElementById('chkMarkers').checked;
+      const showHpbw = document.getElementById('chkHpbw').checked;
+      const showSteering = document.getElementById('chkSteering').checked;
+
+      if (state.activeTab === 'linear') {
+        const traces = [
+          {
+            x: simData.thetaDeg,
+            y: simData.afN,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Normalized |AF_n|',
+            line: { color: '#38bdf8', width: 2.5 }
+          }
+        ];
+
+        // Reference comparison
+        if (state.referenceData) {
+          traces.push({
+            x: state.referenceData.thetaDeg,
+            y: state.referenceData.afN,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Reference Pattern',
+            line: { color: '#a855f7', width: 1.5, dash: 'dot' }
+          });
+        }
+
+        // Steering marker
+        if (showSteering) {
+          traces.push({
+            x: [state.theta0, state.theta0],
+            y: [0, 1.05],
+            type: 'scatter',
+            mode: 'lines',
+            name: `Desired θ₀ = ${state.theta0}°`,
+            line: { color: '#06b6d4', width: 1.5, dash: 'dash' }
+          });
+        }
+
+        // Maxima & Nulls
+        if (showMarkers) {
+          simData.metrics.maxima.forEach(m => {
+            traces.push({
+              x: [m],
+              y: [1.0],
+              type: 'scatter',
+              mode: 'markers+text',
+              name: `Peak ${m.toFixed(1)}°`,
+              text: [`${m.toFixed(1)}°`],
+              textposition: 'top center',
+              marker: { color: '#ef4444', size: 9, symbol: 'circle' }
+            });
+          });
+        }
+
+        const layout = {
+          title: { text: 'Normalized Array Factor |AF_n(θ)|', font: { color: textCol, size: 13 } },
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: textCol },
+          margin: { l: 50, r: 20, t: 35, b: 40 },
+          xaxis: { title: 'Observation Angle θ (degrees)', range: [0, 180], dtick: 30, gridcolor: gridCol },
+          yaxis: { title: 'Normalized |AF_n|', range: [-0.02, 1.12], gridcolor: gridCol },
+          showlegend: false
+        };
+
+        Plotly.react(pDiv, traces, layout, { responsive: true, displayModeBar: false });
+
+      } else if (state.activeTab === 'db') {
+        const floor = state.floorDb;
+        const clampedDb = simData.afDb.map(v => Math.max(floor, v));
+
+        const traces = [
+          {
+            x: simData.thetaDeg,
+            y: clampedDb,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Array Factor (dB)',
+            line: { color: '#f43f5e', width: 2.2 }
+          },
+          {
+            x: [0, 180],
+            y: [-3, -3],
+            type: 'scatter',
+            mode: 'lines',
+            name: '-3 dB Half-Power',
+            line: { color: '#eab308', width: 1.5, dash: 'dash' }
+          }
+        ];
+
+        if (state.referenceData) {
+          const refClamped = state.referenceData.afDb.map(v => Math.max(floor, v));
+          traces.push({
+            x: state.referenceData.thetaDeg,
+            y: refClamped,
+            type: 'scatter',
+            mode: 'lines',
+            name: 'Reference (dB)',
+            line: { color: '#a855f7', width: 1.5, dash: 'dot' }
+          });
+        }
+
+        const layout = {
+          title: { text: `Array Factor (dB) [Floor: ${floor} dB]`, font: { color: textCol, size: 13 } },
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: textCol },
+          margin: { l: 50, r: 20, t: 35, b: 40 },
+          xaxis: { title: 'Observation Angle θ (degrees)', range: [0, 180], dtick: 30, gridcolor: gridCol },
+          yaxis: { title: 'Array Factor (dB)', range: [floor, 2], gridcolor: gridCol },
+          showlegend: false
+        };
+
+        Plotly.react(pDiv, traces, layout, { responsive: true, displayModeBar: false });
+
+      } else if (state.activeTab === 'polar') {
+        // Full 360 degree symmetric polar representation
+        const th360 = [...simData.thetaDeg, ...simData.thetaDeg.slice().reverse().map(t => 360 - t)];
+        const af360 = [...simData.afN, ...simData.afN.slice().reverse()];
+
+        const traces = [
+          {
+            r: af360,
+            theta: th360,
+            type: 'scatterpolar',
+            mode: 'lines',
+            name: 'Polar Pattern',
+            line: { color: '#38bdf8', width: 2.2 },
+            fill: 'toself',
+            fillcolor: state.isDark ? 'rgba(56, 189, 248, 0.15)' : 'rgba(37, 99, 235, 0.1)'
+          }
+        ];
+
+        const layout = {
+          title: { text: 'Polar Radiation Pattern (Linear Scale)', font: { color: textCol, size: 13 } },
+          paper_bgcolor: bg,
+          font: { color: textCol },
+          margin: { l: 30, r: 30, t: 35, b: 30 },
+          polar: {
+            radialaxis: { visible: true, range: [0, 1], gridcolor: gridCol },
+            angularaxis: { direction: 'clockwise', rotation: 90, gridcolor: gridCol }
+          },
+          showlegend: false
+        };
+
+        Plotly.react(pDiv, traces, layout, { responsive: true, displayModeBar: false });
+
+      } else if (state.activeTab === '3d') {
+        // 3D Axisymmetric surface of revolution
+        const nTheta = 40;
+        const nPhi = 40;
+        const thSpan = [];
+        const phiSpan = [];
+        for (let i = 0; i < nTheta; i++) thSpan.push(i * Math.PI / (nTheta - 1));
+        for (let j = 0; j < nPhi; j++) phiSpan.push(j * 2.0 * Math.PI / (nPhi - 1));
+
+        const x = [];
+        const y = [];
+        const z = [];
+
+        const kd = 2.0 * Math.PI * state.d;
+        const betaRad = state.beta * Math.PI / 180.0;
+        const weights = simData.weights;
+        const sumW = weights.reduce((a, b) => a + b, 0.0) || 1.0;
+
+        for (let i = 0; i < nTheta; i++) {
+          const th = thSpan[i];
+          const cosTh = Math.cos(th);
+          let realSum = 0.0;
+          let imagSum = 0.0;
+          for (let n = 0; n < state.N; n++) {
+            const p = n * (kd * cosTh + betaRad);
+            realSum += weights[n] * Math.cos(p);
+            imagSum += weights[n] * Math.sin(p);
+          }
+          const r = Math.min(1.0, Math.sqrt(realSum * realSum + imagSum * imagSum) / sumW);
+
+          const rowX = [];
+          const rowY = [];
+          const rowZ = [];
+          for (let j = 0; j < nPhi; j++) {
+            const ph = phiSpan[j];
+            rowX.push(r * Math.sin(th) * Math.cos(ph));
+            rowY.push(r * Math.sin(th) * Math.sin(ph));
+            rowZ.push(r * Math.cos(th));
+          }
+          x.push(rowX);
+          y.push(rowY);
+          z.push(rowZ);
+        }
+
+        const traces = [
+          {
+            x: x,
+            y: y,
+            z: z,
+            type: 'surface',
+            colorscale: 'Viridis',
+            showscale: false
+          }
+        ];
+
+        const layout = {
+          title: { text: '3D Radiation Pattern (Surface of Revolution)', font: { color: textCol, size: 13 } },
+          paper_bgcolor: bg,
+          margin: { l: 0, r: 0, t: 30, b: 0 },
+          scene: {
+            xaxis: { visible: false },
+            yaxis: { visible: false },
+            zaxis: { visible: false },
+            aspectmode: 'cube'
+          }
+        };
+
+        Plotly.react(pDiv, traces, layout, { responsive: true, displayModeBar: false });
+
+      } else if (state.activeTab === 'weights') {
+        const traces = [
+          {
+            x: simData.weights.map((_, i) => `#${i}`),
+            y: simData.weights,
+            type: 'bar',
+            marker: { color: '#10b981' }
+          }
+        ];
+
+        const layout = {
+          title: { text: `Element Excitation Amplitudes (${state.taper})`, font: { color: textCol, size: 13 } },
+          paper_bgcolor: bg,
+          plot_bgcolor: bg,
+          font: { color: textCol },
+          margin: { l: 50, r: 20, t: 35, b: 40 },
+          xaxis: { title: 'Element Index (n)', gridcolor: gridCol },
+          yaxis: { title: 'Relative Amplitude (a_n)', range: [0, 1.1], gridcolor: gridCol },
+          showlegend: false
+        };
+
+        Plotly.react(pDiv, traces, layout, { responsive: true, displayModeBar: false });
+      }
+    }
+
+    // Geometry Canvas Rendering
+    function renderGeometry(simData) {
+      const canvas = document.getElementById('geometryCanvas');
+      const ctx = canvas.getContext('2d');
+      const width = canvas.clientWidth;
+      const height = canvas.clientHeight;
+      canvas.width = width * window.devicePixelRatio;
+      canvas.height = height * window.devicePixelRatio;
+      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+
+      ctx.clearRect(0, 0, width, height);
+
+      const N = state.N;
+      const d = state.d;
+      const betaRad = state.beta * Math.PI / 180.0;
+      const weights = simData.weights;
+      const kd = 2.0 * Math.PI * d;
+      const thObsRad = state.theta0 * Math.PI / 180.0;
+
+      // 1. Array Layout (Top Half)
+      const yAxis = height * 0.28;
+      const paddingX = 40;
+      const availWidth = width - 2 * paddingX;
+      const stepX = availWidth / Math.max(1, N - 1);
+
+      // Axis line
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(paddingX - 15, yAxis);
+      ctx.lineTo(width - paddingX + 15, yAxis);
+      ctx.stroke();
+
+      // Elements
+      for (let n = 0; n < N; n++) {
+        const x = paddingX + n * stepX;
+        const amp = weights[n] || 1.0;
+
+        // Amplitude Bar (green)
+        ctx.fillStyle = '#10b981';
+        const barH = amp * 22;
+        ctx.fillRect(x - 2, yAxis - barH, 4, barH);
+
+        // Element circle
+        ctx.fillStyle = '#0284c7';
+        ctx.beginPath();
+        ctx.arc(x, yAxis, 4 + amp * 2, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // Index
+        ctx.fillStyle = state.isDark ? '#cbd5e1' : '#334155';
+        ctx.font = '9px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`#${n}`, x, yAxis + 12);
+      }
+
+      // Observation Ray from center
+      const centerX = width / 2;
+      const rayLen = 35;
+      const rayEndX = centerX + rayLen * Math.cos(thObsRad);
+      const rayEndY = yAxis - rayLen * Math.sin(thObsRad);
+
+      ctx.strokeStyle = '#a855f7';
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(centerX, yAxis);
+      ctx.lineTo(rayEndX, rayEndY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#c084fc';
+      ctx.font = 'bold 9px sans-serif';
+      ctx.fillText(`θ=${state.theta0.toFixed(0)}°`, rayEndX + (Math.cos(thObsRad) >= 0 ? 10 : -10), rayEndY);
+
+      // 2. Excitation Phasors (Bottom Half)
+      const yPhasor = height * 0.72;
+      const radius = Math.min(14, stepX * 0.4);
+
+      let realSum = 0.0;
+      let imagSum = 0.0;
+
+      for (let n = 0; n < N; n++) {
+        const x = paddingX + n * stepX;
+        const phi = n * betaRad;
+        const psi = n * (kd * Math.cos(thObsRad) + betaRad);
+
+        realSum += weights[n] * Math.cos(psi);
+        imagSum += weights[n] * Math.sin(psi);
+
+        // Phasor dashed circle
+        ctx.strokeStyle = '#334155';
+        ctx.beginPath();
+        ctx.arc(x, yPhasor, radius, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // Arrow
+        const arrowX = x + radius * Math.cos(phi);
+        const arrowY = yPhasor - radius * Math.sin(phi);
+
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(x, yPhasor);
+        ctx.lineTo(arrowX, arrowY);
+        ctx.stroke();
+
+        // Phase angle
+        const deg = ((n * state.beta) % 360 + 360) % 360;
+        ctx.fillStyle = '#f87171';
+        ctx.font = '8px monospace';
+        ctx.fillText(`${deg.toFixed(0)}°`, x, yPhasor + radius + 10);
+      }
+
+      // Interference Status
+      const sumW = weights.reduce((a, b) => a + b, 0.0) || 1.0;
+      const interfMag = Math.sqrt(realSum * realSum + imagSum * imagSum) / sumW;
+
+      const txtStatus = document.getElementById('txtInterferenceStatus');
+      if (interfMag > 0.8) {
+        txtStatus.textContent = `Constructive Interference (Main Beam) [|AF_n|=${interfMag.toFixed(2)}]`;
+        txtStatus.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800/60';
+      } else if (interfMag < 0.15) {
+        txtStatus.textContent = `Destructive Interference (Null) [|AF_n|=${interfMag.toFixed(2)}]`;
+        txtStatus.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800/60';
+      } else {
+        txtStatus.textContent = `Partial Interference (Sidelobe) [|AF_n|=${interfMag.toFixed(2)}]`;
+        txtStatus.className = 'text-[10px] font-bold px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-800/60';
+      }
+    }
+
+    // Update Numerical Readouts
+    function updateMetricsUI(simData) {
+      const m = simData.metrics;
+
+      // Summary label
+      document.getElementById('txtPhysicalSummary').textContent = `λ: ${simData.wavelengthMm.toFixed(1)} mm | d: ${simData.spacingMm.toFixed(1)} mm`;
+
+      // Main Beam
+      const elMb = document.getElementById('valMainBeam');
+      if (m.mainBeam !== null) {
+        if (m.gratingLobes.length > 0) {
+          elMb.textContent = `${m.mainBeam.toFixed(2)}° (Ambiguous: ${m.gratingLobes.length} Grating Lobes)`;
+          elMb.className = 'font-mono font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800/80';
+        } else {
+          elMb.textContent = `${m.mainBeam.toFixed(2)}°`;
+          elMb.className = 'font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800';
+        }
+      } else {
+        elMb.textContent = 'Not defined (invisible)';
+        elMb.className = 'font-mono font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800';
+      }
+
+      // HPBW
+      const elHp = document.getElementById('valHpbw');
+      if (m.hpbw !== null) {
+        elHp.textContent = `${m.hpbw.toFixed(2)}° (${m.hpLeft.toFixed(1)}° → ${m.hpRight.toFixed(1)}°)`;
+        elHp.className = 'font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800';
+      } else {
+        elHp.textContent = 'Not defined (boundary)';
+        elHp.className = 'font-mono font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800';
+      }
+
+      // FNBW
+      const elFn = document.getElementById('valFnbw');
+      if (m.fnbw !== null) {
+        elFn.textContent = `${m.fnbw.toFixed(2)}°`;
+        elFn.className = 'font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800';
+      } else {
+        elFn.textContent = 'Not defined';
+        elFn.className = 'font-mono font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800';
+      }
+
+      // SLL
+      const elSll = document.getElementById('valSll');
+      if (m.peakSllDb !== null) {
+        elSll.textContent = `${m.peakSllDb.toFixed(2)} dB (@ ${m.peakSllAngle.toFixed(1)}°)`;
+        elSll.className = 'font-mono font-bold text-sky-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800';
+      } else {
+        elSll.textContent = 'Not defined (no sidelobes)';
+        elSll.className = 'font-mono font-bold text-red-400 bg-red-950/60 px-2 py-0.5 rounded border border-red-800';
+      }
+
+      // Grating Lobes
+      const elGr = document.getElementById('valGrating');
+      if (m.gratingLobes.length > 0) {
+        elGr.textContent = `${m.gratingLobes.length} (${m.gratingLobes.map(g => g.toFixed(1) + '°').join(', ')})`;
+        elGr.className = 'font-mono font-bold text-amber-400 bg-amber-950/60 px-2 py-0.5 rounded border border-amber-800';
+      } else {
+        elGr.textContent = '0 (None)';
+        elGr.className = 'font-mono font-bold text-slate-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800';
+      }
+
+      // Phase readouts
+      document.getElementById('valKd').textContent = `${simData.kd.toFixed(4)} rad (${(simData.kd * 180.0 / Math.PI).toFixed(1)}°)`;
+      document.getElementById('valBeta').textContent = `${state.beta.toFixed(1)}° (${(state.beta * Math.PI / 180.0).toFixed(4)} rad)`;
+
+      // Maxima list
+      document.getElementById('valMaximaList').textContent = m.maxima.length > 0 ? m.maxima.map(v => v.toFixed(2) + '°').join(', ') : 'None';
+
+      // Nulls list
+      const nList = m.nulls.slice(0, 8).map(v => v.toFixed(2) + '°').join(', ');
+      document.getElementById('valNullsList').textContent = m.nulls.length > 8 ? `${nList}... (${m.nulls.length} total)` : (nList || 'No visible nulls');
+    }
+
+    // Full Render Cycle
+    function updateAll() {
+      const simData = calcSimulation();
+      renderPlot(simData);
+      renderGeometry(simData);
+      updateMetricsUI(simData);
+    }
+
+    // Auto Steer Computation
+    function updateAutoSteerBeta() {
+      if (!state.autoSteer) return;
+      const kd = 2.0 * Math.PI * state.d;
+      const thRad = state.theta0 * Math.PI / 180.0;
+      const reqBeta = -kd * Math.cos(thRad) * 180.0 / Math.PI;
+      state.beta = reqBeta;
+      document.getElementById('numBeta').value = reqBeta.toFixed(1);
+      document.getElementById('sliderBeta').value = Math.round(reqBeta);
+    }
+
+    // Event Listeners Wiring
+    function setupEventListeners() {
+      // Elements N
+      const numN = document.getElementById('numN');
+      const sliderN = document.getElementById('sliderN');
+      sliderN.addEventListener('input', (e) => {
+        state.N = parseInt(e.target.value);
+        numN.value = state.N;
+        if (state.customWeights.length !== state.N) state.customWeights = Array(state.N).fill(1.0);
+        updateAll();
+      });
+      numN.addEventListener('change', (e) => {
+        state.N = Math.max(2, Math.min(64, parseInt(e.target.value) || 8));
+        numN.value = state.N;
+        sliderN.value = state.N;
+        if (state.customWeights.length !== state.N) state.customWeights = Array(state.N).fill(1.0);
+        updateAll();
+      });
+
+      // Spacing d/lambda
+      const numD = document.getElementById('numD');
+      const sliderD = document.getElementById('sliderD');
+      sliderD.addEventListener('input', (e) => {
+        state.d = parseFloat(e.target.value) / 100.0;
+        numD.value = state.d.toFixed(2);
+        if (state.autoSteer) updateAutoSteerBeta();
+        updateAll();
+      });
+      numD.addEventListener('change', (e) => {
+        state.d = Math.max(0.05, Math.min(2.0, parseFloat(e.target.value) || 0.5));
+        numD.value = state.d.toFixed(2);
+        sliderD.value = Math.round(state.d * 100);
+        if (state.autoSteer) updateAutoSteerBeta();
+        updateAll();
+      });
+
+      // Frequency
+      document.getElementById('numFreq').addEventListener('change', (e) => {
+        state.freq = Math.max(0.1, Math.min(30.0, parseFloat(e.target.value) || 3.0));
+        updateAll();
+      });
+
+      // Steering angle
+      const numTheta0 = document.getElementById('numTheta0');
+      const sliderTheta0 = document.getElementById('sliderTheta0');
+      sliderTheta0.addEventListener('input', (e) => {
+        state.theta0 = parseFloat(e.target.value);
+        numTheta0.value = state.theta0;
+        if (state.autoSteer) updateAutoSteerBeta();
+        updateAll();
+      });
+      numTheta0.addEventListener('change', (e) => {
+        state.theta0 = Math.max(0, Math.min(180, parseFloat(e.target.value) || 90));
+        numTheta0.value = state.theta0;
+        sliderTheta0.value = state.theta0;
+        if (state.autoSteer) updateAutoSteerBeta();
+        updateAll();
+      });
+
+      // Progressive Phase beta
+      const numBeta = document.getElementById('numBeta');
+      const sliderBeta = document.getElementById('sliderBeta');
+      sliderBeta.addEventListener('input', (e) => {
+        state.beta = parseFloat(e.target.value);
+        numBeta.value = state.beta;
+        if (state.autoSteer) toggleAutoSteer(false);
+        updateAll();
+      });
+      numBeta.addEventListener('change', (e) => {
+        state.beta = Math.max(-360, Math.min(360, parseFloat(e.target.value) || 0));
+        numBeta.value = state.beta;
+        sliderBeta.value = state.beta;
+        if (state.autoSteer) toggleAutoSteer(false);
+        updateAll();
+      });
+
+      // Auto Steer Button
+      const btnAutoSteer = document.getElementById('btnAutoSteer');
+      btnAutoSteer.addEventListener('click', () => {
+        toggleAutoSteer(!state.autoSteer);
+      });
+
+      function toggleAutoSteer(enable) {
+        state.autoSteer = enable;
+        if (state.autoSteer) {
+          btnAutoSteer.textContent = '⚡ Auto Steer: ON';
+          btnAutoSteer.className = 'w-full mt-1 py-1.5 text-xs font-bold rounded bg-blue-600 hover:bg-blue-500 text-white shadow transition flex items-center justify-center gap-1.5';
+          updateAutoSteerBeta();
+        } else {
+          btnAutoSteer.textContent = 'Auto Steer: OFF (Manual Phase)';
+          btnAutoSteer.className = 'w-full mt-1 py-1.5 text-xs font-semibold rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center justify-center gap-1.5';
+        }
+        updateAll();
+      }
+
+      // Tapering
+      const selectTaper = document.getElementById('selectTaper');
+      const btnEditWeights = document.getElementById('btnEditCustomWeights');
+      selectTaper.addEventListener('change', (e) => {
+        state.taper = e.target.value;
+        btnEditWeights.classList.toggle('hidden', state.taper !== 'Custom');
+        updateAll();
+      });
+
+      // Custom weights modal
+      btnEditWeights.addEventListener('click', () => {
+        const tbody = document.getElementById('tableWeightsBody');
+        tbody.innerHTML = '';
+        for (let i = 0; i < state.N; i++) {
+          const w = state.customWeights[i] !== undefined ? state.customWeights[i] : 1.0;
+          tbody.innerHTML += `
+            <tr>
+              <td class="p-2 text-slate-400">#${i}</td>
+              <td class="p-2"><input type="number" step="0.05" min="0" max="1" value="${w.toFixed(2)}" class="weight-input w-20 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-right font-mono text-white text-xs" data-index="${i}"></td>
+            </tr>
+          `;
+        }
+        document.getElementById('modalWeights').classList.remove('hidden');
+      });
+
+      document.getElementById('btnCloseModal').addEventListener('click', () => {
+        document.getElementById('modalWeights').classList.add('hidden');
+      });
+
+      document.getElementById('btnApplyCustomWeights').addEventListener('click', () => {
+        const inputs = document.querySelectorAll('.weight-input');
+        const newW = [];
+        inputs.forEach(inp => {
+          newW.push(Math.max(0, Math.min(1.0, parseFloat(inp.value) || 1.0)));
+        });
+        state.customWeights = newW;
+        document.getElementById('modalWeights').classList.add('hidden');
+        updateAll();
+      });
+
+      // Step & Floor
+      document.getElementById('selectStep').addEventListener('change', (e) => {
+        state.step = parseFloat(e.target.value);
+        updateAll();
+      });
+      document.getElementById('selectFloor').addEventListener('change', (e) => {
+        state.floorDb = parseFloat(e.target.value);
+        updateAll();
+      });
+
+      // Overlays
+      ['chkMarkers', 'chkHpbw', 'chkSteering'].forEach(id => {
+        document.getElementById(id).addEventListener('change', updateAll);
+      });
+
+      // Presets
+      document.getElementById('btnBroadside').addEventListener('click', () => {
+        state.theta0 = 90.0;
+        state.beta = 0.0;
+        document.getElementById('numTheta0').value = 90;
+        document.getElementById('sliderTheta0').value = 90;
+        document.getElementById('numBeta').value = 0;
+        document.getElementById('sliderBeta').value = 0;
+        toggleAutoSteer(true);
+        updateAll();
+      });
+
+      document.getElementById('btnPosEndfire').addEventListener('click', () => {
+        state.theta0 = 0.0;
+        const kd = 2.0 * Math.PI * state.d;
+        state.beta = -kd * 180.0 / Math.PI;
+        document.getElementById('numTheta0').value = 0;
+        document.getElementById('sliderTheta0').value = 0;
+        document.getElementById('numBeta').value = state.beta.toFixed(1);
+        document.getElementById('sliderBeta').value = Math.round(state.beta);
+        toggleAutoSteer(true);
+        updateAll();
+      });
+
+      document.getElementById('btnNegEndfire').addEventListener('click', () => {
+        state.theta0 = 180.0;
+        const kd = 2.0 * Math.PI * state.d;
+        state.beta = kd * 180.0 / Math.PI;
+        document.getElementById('numTheta0').value = 180;
+        document.getElementById('sliderTheta0').value = 180;
+        document.getElementById('numBeta').value = state.beta.toFixed(1);
+        document.getElementById('sliderBeta').value = Math.round(state.beta);
+        toggleAutoSteer(true);
+        updateAll();
+      });
+
+      document.getElementById('btnReset').addEventListener('click', () => {
+        state.N = 8;
+        state.d = 0.50;
+        state.freq = 3.0;
+        state.theta0 = 90.0;
+        state.beta = 0.0;
+        state.step = 0.10;
+        state.floorDb = -60.0;
+        state.taper = 'Uniform';
+        state.customWeights = Array(8).fill(1.0);
+        state.referenceData = null;
+
+        document.getElementById('numN').value = 8;
+        document.getElementById('sliderN').value = 8;
+        document.getElementById('numD').value = '0.50';
+        document.getElementById('sliderD').value = 50;
+        document.getElementById('numFreq').value = '3.0';
+        document.getElementById('numTheta0').value = 90;
+        document.getElementById('sliderTheta0').value = 90;
+        document.getElementById('numBeta').value = 0;
+        document.getElementById('sliderBeta').value = 0;
+        document.getElementById('selectTaper').value = 'Uniform';
+        document.getElementById('selectStep').value = '0.10';
+        document.getElementById('selectFloor').value = '-60';
+        document.getElementById('btnCompare').textContent = 'Compare';
+
+        toggleAutoSteer(true);
+        updateAll();
+      });
+
+      // Animation
+      const btnAnim = document.getElementById('btnAnimate');
+      btnAnim.addEventListener('click', () => {
+        state.animating = !state.animating;
+        if (state.animating) {
+          btnAnim.textContent = '⏸ Pause';
+          btnAnim.className = 'py-1 px-2 bg-amber-900/80 hover:bg-amber-800 border border-amber-700 text-amber-200 font-bold rounded transition';
+          toggleAutoSteer(true);
+          animInterval = setInterval(() => {
+            let nextTh = state.theta0 + state.animDir * 1.5;
+            if (nextTh >= 160.0) {
+              nextTh = 160.0;
+              state.animDir = -1;
+            } else if (nextTh <= 20.0) {
+              nextTh = 20.0;
+              state.animDir = 1;
+            }
+            state.theta0 = nextTh;
+            document.getElementById('numTheta0').value = nextTh.toFixed(1);
+            document.getElementById('sliderTheta0').value = Math.round(nextTh);
+            updateAutoSteerBeta();
+            updateAll();
+          }, 40);
+        } else {
+          clearInterval(animInterval);
+          btnAnim.textContent = '▶ Animate';
+          btnAnim.className = 'py-1 px-2 bg-emerald-900/80 hover:bg-emerald-800 border border-emerald-700 text-emerald-200 font-bold rounded transition';
+        }
+      });
+
+      // Compare Patterns
+      const btnComp = document.getElementById('btnCompare');
+      btnComp.addEventListener('click', () => {
+        if (state.referenceData) {
+          state.referenceData = null;
+          btnComp.textContent = 'Compare';
+        } else {
+          const simData = calcSimulation();
+          state.referenceData = {
+            thetaDeg: [...simData.thetaDeg],
+            afN: [...simData.afN],
+            afDb: [...simData.afDb]
+          };
+          btnComp.textContent = 'Clear Ref';
+        }
+        updateAll();
+      });
+
+      // Tabs
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.tab-btn').forEach(b => {
+            b.className = 'tab-btn px-3 py-1 text-xs font-medium rounded-t text-slate-400 hover:text-slate-200';
+          });
+          e.target.className = 'tab-btn px-3 py-1 text-xs font-bold rounded-t text-sky-400 bg-slate-900 border-t border-x border-slate-800 border-b-0';
+          state.activeTab = e.target.getAttribute('data-tab');
+          updateAll();
+        });
+      });
+
+      // Theme toggle
+      const btnTheme = document.getElementById('btnToggleTheme');
+      btnTheme.addEventListener('click', () => {
+        state.isDark = !state.isDark;
+        document.documentElement.classList.toggle('dark', state.isDark);
+        btnTheme.textContent = state.isDark ? '☀️ Light Mode' : '🌙 Dark Mode';
+        btnTheme.className = state.isDark
+          ? 'px-2.5 py-1 text-xs font-semibold rounded bg-slate-800 hover:bg-slate-700 text-amber-400 border border-slate-700 transition flex items-center gap-1'
+          : 'px-2.5 py-1 text-xs font-semibold rounded bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300 transition flex items-center gap-1';
+        updateAll();
+      });
+
+      // CSV Export
+      document.getElementById('btnExportCsv').addEventListener('click', () => {
+        const simData = calcSimulation();
+        let csv = 'theta_deg,psi_rad,af_normalized,af_db\n';
+        const kd = 2.0 * Math.PI * state.d;
+        const betaRad = state.beta * Math.PI / 180.0;
+
+        for (let i = 0; i < simData.thetaDeg.length; i++) {
+          const thRad = simData.thetaRad[i];
+          const psi = kd * Math.cos(thRad) + betaRad;
+          csv += `${simData.thetaDeg[i].toFixed(2)},${psi.toFixed(4)},${simData.afN[i].toFixed(5)},${simData.afDb[i].toFixed(2)}\n`;
+        }
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `antenna_array_N${state.N}_d${state.d}_theta0_${state.theta0}.csv`;
+        link.click();
+      });
+
+      window.addEventListener('resize', () => {
+        const simData = calcSimulation();
+        renderGeometry(simData);
+      });
+    }
+
+    // Initialize on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      setupEventListeners();
+      updateAll();
+    });
+  </script>
+</body>
+</html>
