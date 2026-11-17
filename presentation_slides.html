@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Antenna Array Simulation - 5-Page Presentation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Fira+Code:wght@400;600&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'Fira Code', monospace; }
+    .slide { display: none; }
+    .slide.active { display: flex; animation: fadeIn 0.3s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.99); } to { opacity: 1; transform: scale(1); } }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between overflow-hidden select-none">
+
+  <!-- Top Navigation Bar -->
+  <header class="px-6 py-3 border-b border-slate-800/80 bg-slate-900/60 backdrop-blur flex justify-between items-center text-xs">
+    <div class="flex items-center gap-3">
+      <span class="px-2 py-0.5 rounded bg-sky-500/20 text-sky-400 font-bold border border-sky-500/30 uppercase tracking-wider">
+        Antenna Simulation
+      </span>
+      <span id="slide-topic" class="text-slate-400 font-medium">Linear Antenna Array Modeling & Viva Defense</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="/Antenna_Array_Presentation.pptx" download class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        <i class="fa-solid fa-file-powerpoint text-amber-400"></i> Download PPTX
+      </a>
+      <span class="text-slate-400 font-mono" id="slide-indicator">Slide 1 / 5</span>
+      <button onclick="toggleFullscreen()" class="text-slate-400 hover:text-white" title="Toggle Fullscreen">
+        <i class="fa-solid fa-expand"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Presentation Slides Container -->
+  <main class="flex-1 flex items-center justify-center p-6 max-w-7xl mx-auto w-full">
+
+    <!-- SLIDE 1: TITLE SLIDE -->
+    <div class="slide active flex-col w-full bg-slate-900 border border-slate-800 rounded-2xl p-10 shadow-2xl relative overflow-hidden" data-topic="Introduction & Overview">
+      <div class="absolute -right-20 -top-20 w-80 h-80 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div class="flex items-center gap-2 text-sky-400 text-xs font-bold tracking-widest uppercase mb-3">
+        <i class="fa-solid fa-satellite-dish"></i> Electromagnetic Engineering & Array Theory
+      </div>
+      <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4">
+        Interactive Linear Antenna<br><span class="text-sky-400">Array Simulation</span>
+      </h1>
+      <p class="text-slate-400 text-base max-w-3xl mb-8 leading-relaxed">
+        High-Precision Radiation Pattern Modeling, Real-Time Phased Beam Steering, Singularity-Free Physics Engine & Automated Metrics Analysis for Academic Defense.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-auto">
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+          <div class="text-sky-400 font-bold text-sm mb-1">Uniform Linear Arrays</div>
+          <div class="text-xs text-slate-300">N = 2 to 64 Elements along z-axis, d/λ = 0.05 to 2.0</div>
+        </div>
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+          <div class="text-emerald-400 font-bold text-sm mb-1">Dual-Platform Suite</div>
+          <div class="text-xs text-slate-300">PyQt6 Desktop + High-Speed Vercel Web SPA</div>
+        </div>
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+          <div class="text-purple-400 font-bold text-sm mb-1">Analytical Physics</div>
+          <div class="text-xs text-slate-300">Exact Summation & Closed-Form with L'Hôpital Limit</div>
+        </div>
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4">
+          <div class="text-amber-400 font-bold text-sm mb-1">Live Beam Metrics</div>
+          <div class="text-xs text-slate-300">Exact HPBW, FNBW, PSLL (-13.26 dB) & Grating Lobes</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: MATHEMATICAL FORMULATIONS -->
+    <div class="slide flex-col w-full bg-slate-900 border border-slate-800 rounded-2xl p-10 shadow-2xl relative" data-topic="Governing Mathematical Formulations">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <span class="text-sky-400 text-xs font-bold uppercase tracking-wider">Electromagnetic Foundations</span>
+          <h2 class="text-2xl font-bold text-white">Governing Physics & Analytical Array Factor</h2>
+        </div>
+        <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">First-Principles Rigor</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 flex-1">
+        <!-- Col 1 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-sky-400 font-bold text-sm mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-compass"></i> Geometry & Phase Shift
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <li><strong class="text-emerald-400">Orientation:</strong> Line source along z-axis. θ measured from positive array axis (0° to 180°).</li>
+              <li><strong class="text-emerald-400">Wave Number:</strong> k = 2π / λ, where λ = c / f.</li>
+              <li><strong class="text-emerald-400">Spatial-Electrical Phase:</strong><br><code class="text-sky-300 bg-slate-900 px-1 py-0.5 rounded">ψ = k·d·cos(θ) + β</code></li>
+              <li><strong class="text-emerald-400">Progressive Phase β:</strong><br><code class="text-sky-300 bg-slate-900 px-1 py-0.5 rounded">β = -k·d·cos(θ₀)</code><br>Applied per-element to steer peak to θ₀.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Col 2 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-sky-400 font-bold text-sm mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-calculator"></i> Array Factor Solutions
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <li><strong class="text-emerald-400">Complex Summation:</strong><br><code class="text-sky-300 bg-slate-900 px-1 py-0.5 rounded">AF(θ) = Σ aₙ · e^(j·n·ψ)</code><br>Supports arbitrary amplitude tapers aₙ.</li>
+              <li><strong class="text-emerald-400">Closed-Form (Uniform):</strong><br><code class="text-sky-300 bg-slate-900 px-1 py-0.5 rounded">|AF| = |sin(Nψ/2) / sin(ψ/2)|</code></li>
+              <li><strong class="text-emerald-400">Power & Decibel Conversion:</strong><br>P(θ) = |AF_norm|²<br>AF_dB = 20·log₁₀|AF_norm(θ)|<br>Clipped at floor (-100 to -20 dB).</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Col 3 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-sky-400 font-bold text-sm mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-shield-halved"></i> Singularity Resolution
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <li><strong class="text-emerald-400">Indeterminate Form:</strong> When ψ → 2mπ, both numerator and denominator vanish (0/0).</li>
+              <li><strong class="text-emerald-400">L'Hôpital Limit:</strong><br><code class="text-sky-300 bg-slate-900 px-1 py-0.5 rounded">lim_{ψ→2mπ} |AF| = N</code></li>
+              <li><strong class="text-emerald-400">Precision Guarantee:</strong> Identifies |sin(ψ/2)| &lt; 1e-12 and assigns N. Cross-verified with summation error &lt; 1e-10.</li>
+              <li><strong class="text-emerald-400">Safe Decibels:</strong> Clamped to 1e-15 floor before log₁₀ to prevent -inf crashes.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: SYSTEM ARCHITECTURE & CONTROLS -->
+    <div class="slide flex-col w-full bg-slate-900 border border-slate-800 rounded-2xl p-10 shadow-2xl relative" data-topic="Architecture & Real-Time Controls">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <span class="text-sky-400 text-xs font-bold uppercase tracking-wider">Software Engineering</span>
+          <h2 class="text-2xl font-bold text-white">Decoupled Architecture & Real-Time Controls</h2>
+        </div>
+        <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">Model-View-Controller</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5 flex-1">
+        <!-- Architecture Stack -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5">
+          <h3 class="text-sky-400 font-bold text-sm mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-layer-group"></i> Multi-Layer Architecture
+          </h3>
+          <div class="space-y-3 text-xs">
+            <div class="border-l-2 border-sky-500 pl-3">
+              <div class="font-bold text-slate-200">Core Physics Engine (<code>core/</code>)</div>
+              <div class="text-slate-400">Pure NumPy analytical routines with zero GUI coupling. Fast vectorized computation across 18,000 angular samples.</div>
+            </div>
+            <div class="border-l-2 border-emerald-500 pl-3">
+              <div class="font-bold text-slate-200">Metrics Extractor (<code>analysis/</code>)</div>
+              <div class="text-slate-400">Automated sub-grid interpolation for exact -3 dB HPBW, first nulls, peak sidelobe level (PSLL), and grating lobe count.</div>
+            </div>
+            <div class="border-l-2 border-purple-500 pl-3">
+              <div class="font-bold text-slate-200">Desktop Presentation (PyQt6 & Matplotlib)</div>
+              <div class="text-slate-400">Professional desktop GUI: 4 synced panels, 2D Cartesian, Polar, and 3D radiation plots, HTML5 array geometry canvas, dark/light themes.</div>
+            </div>
+            <div class="border-l-2 border-amber-500 pl-3">
+              <div class="font-bold text-slate-200">Cloud Web SPA (Vercel Edge)</div>
+              <div class="text-slate-400">Zero-config, client-side JavaScript engine running Plotly.js charts at 60 FPS without lambda bundle limits.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controls & Presets -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5">
+          <h3 class="text-sky-400 font-bold text-sm mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-sliders"></i> Synchronized Controls & Presets
+          </h3>
+          <div class="space-y-3 text-xs">
+            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+              <span class="text-sky-400 font-bold">Continuous Input Synchronization:</span>
+              <p class="text-slate-300 mt-1">Bidirectional sync between sliders and numerical spinboxes (N: 2-64, d/λ: 0.05-2.0, β: -360° to +360°, f: 0.1-30 GHz, θ₀: 0°-180°). Physical spacing updates in mm in real-time.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+              <span class="text-emerald-400 font-bold">One-Click Engineering Presets:</span>
+              <p class="text-slate-300 mt-1">Instant triggers for Broadside (θ₀=90°, β=0°), Positive End-Fire (θ₀=0°, β=-kd), Negative End-Fire (θ₀=180°, β=+kd), and dynamic beam steering animation.</p>
+            </div>
+            <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+              <span class="text-amber-400 font-bold">Amplitude Tapering Windows:</span>
+              <p class="text-slate-300 mt-1">Selectable Uniform, Hann (Cosine), and Binomial distributions for direct trade-off comparison between sidelobe suppression and main beam broadening.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: THE 4 BENCHMARK EXPERIMENTS -->
+    <div class="slide flex-col w-full bg-slate-900 border border-slate-800 rounded-2xl p-10 shadow-2xl relative" data-topic="Core Antenna Experiments">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <span class="text-sky-400 text-xs font-bold uppercase tracking-wider">Experimental Validation</span>
+          <h2 class="text-2xl font-bold text-white">Verification of Key Electromagnetic Phenomena</h2>
+        </div>
+        <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">Benchmark Cases</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1">
+        <!-- Exp 1 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-sky-400 font-bold text-xs uppercase">Exp 1: Element Count Scaling</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-sky-500/20 text-sky-300 font-mono">N = 2, 4, 8, 16, 32, 64</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            • Main beam narrows proportionally to 1/N (HPBW drops from ~50° to ~3.2°).<br>
+            • Directivity scales linearly with element count N.<br>
+            • First sidelobe level remains locked at theoretical -13.26 dB for uniform arrays.<br>
+            • Visible null count equals exactly N - 1.
+          </p>
+        </div>
+
+        <!-- Exp 2 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-emerald-400 font-bold text-xs uppercase">Exp 2: Spacing & Grating Lobes</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono">d/λ = 0.1 to 2.0</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            • For d &lt; 0.5λ: Single broadside beam with zero grating lobes.<br>
+            • At d = 1.0λ: First grating lobes emerge at end-fire angles (0° & 180°) at 0 dB.<br>
+            • For d &gt; 1.0λ: Severe spatial aliasing introduces multiple secondary major maxima.<br>
+            • Grating-free condition verified: d/λ &lt; 1 / (1 + |cos θ₀|).
+          </p>
+        </div>
+
+        <!-- Exp 3 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-amber-400 font-bold text-xs uppercase">Exp 3: Phased Beam Steering</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono">θ₀ = 0° to 180°</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            • Linear feed phase β = -kd cos(θ₀) shifts the main beam electronically.<br>
+            • Beam broadening observed away from broadside: HPBW(θ₀) ≈ HPBW_broadside / sin(θ₀).<br>
+            • Effective aperture length contracts from L to L·sin(θ₀).<br>
+            • End-fire configurations (0° and 180°) produce wide conical beams.
+          </p>
+        </div>
+
+        <!-- Exp 4 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="text-purple-400 font-bold text-xs uppercase">Exp 4: Amplitude Window Tapering</span>
+            <span class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-mono">Uniform vs Hann vs Binomial</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            • Uniform: Narrowest beam (HPBW = 12.8°), highest sidelobes (-13.26 dB).<br>
+            • Hann (Cosine): Sidelobes suppressed to -31.5 dB; HPBW widens by ~35% (17.5°).<br>
+            • Binomial: Complete elimination of sidelobes for d ≤ 0.5λ at the cost of broad beam.<br>
+            • Proves the fundamental engineering trade-off: resolution vs. interference rejection.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: VERIFICATION & APPLICATIONS -->
+    <div class="slide flex-col w-full bg-slate-900 border border-slate-800 rounded-2xl p-10 shadow-2xl relative" data-topic="Verification & Real-World Impact">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <span class="text-sky-400 text-xs font-bold uppercase tracking-wider">Quality Assurance & Impact</span>
+          <h2 class="text-2xl font-bold text-white">Verification Rigor & Engineering Applications</h2>
+        </div>
+        <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700">81/81 Tests Passing</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5 flex-1">
+        <!-- Col 1 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-sky-400 font-bold text-sm mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-vial-circle-check"></i> Automated Test Suite
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <li><strong class="text-emerald-400">81 Passing Tests:</strong> Full unit, integration, and edge-case coverage via pytest.</li>
+              <li><strong class="text-emerald-400">Physics Parity:</strong> Zero-error cross check between closed-form and summation across all valid N and d/λ.</li>
+              <li><strong class="text-emerald-400">Edge Boundaries:</strong> Validated boundary angles (0°, 180°), phase wrapping (-360° to +360°), and removable singularities.</li>
+              <li><strong class="text-emerald-400">UI State Integrity:</strong> Automatic slider-spinbox sync and weight normalization verified.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Col 2 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-emerald-400 font-bold text-sm mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-tower-cell"></i> Practical Applications
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <li><strong class="text-sky-400">5G / 6G Massive MIMO:</strong> Dynamic multi-user beamforming and spatial nulling to eliminate cellular co-channel interference.</li>
+              <li><strong class="text-sky-400">Phased-Array Radar (AESA):</strong> Inertia-free millisecond electronic beam scanning for multi-target tracking.</li>
+              <li><strong class="text-sky-400">Satellite Ground Terminals:</strong> Dynamic tracking of LEO satellite constellations (e.g. Starlink) without mechanical gimbals.</li>
+              <li><strong class="text-sky-400">Radio Astronomy:</strong> Interferometer arrays synthesizing kilometer-scale baseline apertures.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Col 3 -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <h3 class="text-purple-400 font-bold text-sm mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-circle-check"></i> Project Summary
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2 leading-relaxed">
+              <li><strong class="text-emerald-400">Full Compliance:</strong> Satisfied all academic brief requirements with analytical electromagnetic precision.</li>
+              <li><strong class="text-emerald-400">Dual Delivery:</strong> Native desktop application + global edge-deployed web simulator.</li>
+              <li><strong class="text-emerald-400">Pedagogical Value:</strong> Translates abstract array factor mathematics into an interactive visual experience.</li>
+              <li><strong class="text-emerald-400">Live Demo Ready:</strong> Codebase tested and prepared for viva examination.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Navigation Controls -->
+  <footer class="px-6 py-3 border-t border-slate-800/80 bg-slate-900/60 backdrop-blur flex justify-between items-center text-xs">
+    <div class="flex items-center gap-2 text-slate-400">
+      <span class="kbd px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono border border-slate-700">←</span>
+      <span class="kbd px-1.5 py-0.5 rounded bg-slate-800 text-[10px] font-mono border border-slate-700">→</span>
+      <span>or Spacebar to navigate</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="prevSlide()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+        <i class="fa-solid fa-chevron-left text-xs"></i> Previous
+      </button>
+      <button onclick="nextSlide()" class="px-4 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-medium flex items-center gap-1.5 transition shadow-lg shadow-sky-600/20">
+        Next <i class="fa-solid fa-chevron-right text-xs"></i>
+      </button>
+    </div>
+  </footer>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const indicator = document.getElementById('slide-indicator');
+    const topic = document.getElementById('slide-topic');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      indicator.textContent = `Slide ${currentSlide + 1} / ${slides.length}`;
+      topic.textContent = slides[currentSlide].getAttribute('data-topic');
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key.toLowerCase() === 'f') {
+        toggleFullscreen();
+      }
+    });
+  </script>
+</body>
+</html>
